@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "SCG Mobile",
+    "slug": "scg-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": ["**/*"]
+  }
+}

@@ -1,0 +1,24 @@
+import type { Truck, Pilot, Trip, MaintenanceTask, FuelRecord, CostRecord, AlertItem } from '../types/index.js';
+export declare function getAllTrucks(): Promise<Truck[]>;
+export declare function getTruckById(id: string): Promise<Truck>;
+export declare function createTruck(truck: Omit<Truck, 'id' | 'createdAt' | 'updatedAt'>): Promise<Truck>;
+export declare function updateTruck(id: string, updates: Partial<Truck>): Promise<Truck>;
+export declare function getAllPilots(): Promise<Pilot[]>;
+export declare function getPilotById(id: string): Promise<Pilot>;
+export declare function createPilot(pilot: Omit<Pilot, 'id' | 'createdAt' | 'updatedAt'>): Promise<Pilot>;
+export declare function updatePilot(id: string, updates: Partial<Pilot>): Promise<Pilot>;
+export declare function getAllTrips(): Promise<Trip[]>;
+export declare function getTripById(id: string): Promise<Trip>;
+export declare function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>): Promise<Trip>;
+export declare function updateTrip(id: string, updates: Partial<Trip>): Promise<Trip>;
+export declare function getAllMaintenanceTasks(): Promise<MaintenanceTask[]>;
+export declare function createMaintenanceTask(task: Omit<MaintenanceTask, 'id' | 'createdAt' | 'updatedAt'>): Promise<MaintenanceTask>;
+export declare function updateMaintenanceTask(id: string, updates: Partial<MaintenanceTask>): Promise<MaintenanceTask>;
+export declare function getAllFuelRecords(): Promise<FuelRecord[]>;
+export declare function createFuelRecord(record: Omit<FuelRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<FuelRecord>;
+export declare function getAllCostRecords(): Promise<CostRecord[]>;
+export declare function createCostRecord(record: Omit<CostRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<CostRecord>;
+export declare function getAllAlerts(): Promise<AlertItem[]>;
+export declare function createAlert(alert: Omit<AlertItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<AlertItem>;
+export declare function resolveAlert(id: string): Promise<AlertItem>;
+//# sourceMappingURL=database.d.ts.map

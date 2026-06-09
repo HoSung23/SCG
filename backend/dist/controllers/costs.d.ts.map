@@ -1,0 +1,1 @@
+{"version":3,"file":"costs.d.ts","sourceRoot":"","sources":["../../src/controllers/costs.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAA;AAI3C,wBAAsB,eAAe,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ,iBAOhE;AAED,wBAAsB,kBAAkB,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ,iBAyBnE;AAED,wBAAsB,UAAU,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ,iBAwB3D"}

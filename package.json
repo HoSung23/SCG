@@ -1,0 +1,22 @@
+{
+  "name": "scg-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "web",
+    "mobile",
+    "electron",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev:web": "npm run dev --workspace web",
+    "dev:mobile": "npm run dev --workspace mobile",
+    "dev:electron": "npm run dev --workspace electron",
+    "dev:backend": "npm run dev --workspace backend",
+    "build:web": "npm run build --workspace web",
+    "build:backend": "npm run build --workspace backend",
+    "preview:web": "npm run preview --workspace web",
+    "start:backend": "npm run start --workspace backend"
+  }
+}
