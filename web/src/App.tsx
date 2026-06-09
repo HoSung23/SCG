@@ -1,9 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toast, Toaster } from 'sonner'
+import { AlertTriangle, DollarSign, Fuel, Route, Truck, Wrench } from 'lucide-react'
+import { KpiCard } from './components/KpiCard'
+import { Sidebar } from './components/Sidebar'
+import { StatusBadge } from './components/StatusBadge'
+import { Topbar } from './components/Topbar'
+import { DashboardCharts } from './components/charts/DashboardCharts'
 import {
   alerts,
   fleet,
   fuelSnapshots,
-  highestFuelPriceGTQ,
   maintenanceQueue,
   monthlyCosts,
   pilots,
@@ -41,6 +47,7 @@ export function App() {
   type CostKey = keyof typeof monthlyCosts
 
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tripState, setTripState] = useState(trips)
   const [costState, setCostState] = useState(monthlyCosts)
   const [fleetState, setFleetState] = useState(fleet)
@@ -86,10 +93,10 @@ export function App() {
   const totalCost = costState.fuel + costState.maintenance + costState.payroll + costState.admin
   const activeTrucks = fleetState.filter((truck) => truck.status === 'active').length
   const maintenanceCount = maintenanceState.filter((task) => task.status !== 'completado').length
-  const avgFuelPrice = fuelState.reduce((acc, item) => acc + item.dieselGtq, 0) / fuelState.length
+  const avgFuelPrice = fuelState.length > 0 ? fuelState.reduce((acc, item) => acc + item.dieselGtq, 0) / fuelState.length : 0
   const connectivityRisk = alertState.filter((item) => item.level === 'critical').length
 
-  const maxFuelValue = Math.max(...fuelState.map((item) => item.dieselGtq))
+  const maxFuelValue = fuelState.length > 0 ? Math.max(...fuelState.map((item) => item.dieselGtq)) : 1
 
   const tabLabelMap: Record<TabId, string> = {
     dashboard: 'Dashboard',
@@ -111,47 +118,37 @@ export function App() {
     [selectedTripId, tripState]
   )
 
-  useEffect(() => {
-    let isMounted = true
-
-    const loadData = async () => {
-      try {
-        const dashboardData = await loadDashboardData()
-        if (!isMounted) {
-          return
-        }
-
-        setFleetState(dashboardData.fleet)
-        setPilotState(dashboardData.pilots)
-        setTripState(dashboardData.trips)
-        setMaintenanceState(dashboardData.maintenanceQueue)
-        setFuelState(dashboardData.fuelSnapshots)
-        setCostState(dashboardData.monthlyCosts)
-        setAlertState(dashboardData.alerts)
-        setRouteState(dashboardData.routeTimeline)
-        setSelectedTripId(dashboardData.trips[0]?.id ?? '')
-        setSelectedPilotId(dashboardData.pilots[0]?.id ?? '')
-        setSelectedTruckId(dashboardData.fleet[0]?.id ?? '')
-        setSelectedFleetTruckId(dashboardData.fleet[0]?.id ?? '')
-        setSelectedFuelStation(dashboardData.fuelSnapshots[0]?.station ?? 'Shell')
-        setIsLoadingData(false)
-        setLoadError('')
-      } catch (error) {
-        if (!isMounted) {
-          return
-        }
-
-        setIsLoadingData(false)
-        setLoadError(error instanceof Error ? error.message : 'No se pudieron cargar los datos reales')
-      }
+  const hydrateDashboardData = useCallback(async (isInitialLoad = false) => {
+    if (isInitialLoad) {
+      setIsLoadingData(true)
     }
 
-    loadData()
-
-    return () => {
-      isMounted = false
+    try {
+      const dashboardData = await loadDashboardData()
+      setFleetState(dashboardData.fleet)
+      setPilotState(dashboardData.pilots)
+      setTripState(dashboardData.trips)
+      setMaintenanceState(dashboardData.maintenanceQueue)
+      setFuelState(dashboardData.fuelSnapshots)
+      setCostState(dashboardData.monthlyCosts)
+      setAlertState(dashboardData.alerts)
+      setRouteState(dashboardData.routeTimeline)
+      setSelectedTripId((current) => current || dashboardData.trips[0]?.id || '')
+      setSelectedPilotId((current) => current || dashboardData.pilots[0]?.id || '')
+      setSelectedTruckId((current) => current || dashboardData.fleet[0]?.id || '')
+      setSelectedFleetTruckId((current) => current || dashboardData.fleet[0]?.id || '')
+      setSelectedFuelStation((current) => current || dashboardData.fuelSnapshots[0]?.station || 'Shell')
+      setLoadError('')
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'No se pudieron cargar los datos reales')
+    } finally {
+      setIsLoadingData(false)
     }
   }, [])
+
+  useEffect(() => {
+    void hydrateDashboardData(true)
+  }, [hydrateDashboardData])
 
   const dismissCriticalAlert = async () => {
     const criticalAlert = alertState.find((alert) => alert.level === 'critical')
@@ -162,9 +159,11 @@ export function App() {
     try {
       await apiClient.resolveAlert(criticalAlert.id)
     } catch {
-      // silently allow local update even if backend fails
+      toast.error('La alerta se resolvió localmente, pero no se pudo sincronizar')
     }
     setAlertState((currentAlerts) => currentAlerts.filter((alert) => alert.id !== criticalAlert.id))
+    toast.success('Alerta crítica resuelta')
+    void hydrateDashboardData()
   }
 
   const advanceTripStatus = async () => {
@@ -177,13 +176,13 @@ export function App() {
       return
     }
 
-    const nextStatus: Trip['status'] =
+    const nextStatus: 'programado' | 'en-ruta' | 'completado' =
       currentTrip.status === 'programado' ? 'en-ruta' : 'completado'
 
     try {
       await apiClient.updateTripStatus(selectedTripId, nextStatus)
     } catch {
-      // silently allow local update
+      toast.error('No se pudo sincronizar el viaje; se aplicó el cambio local')
     }
 
     setTripState((currentTrips) =>
@@ -191,6 +190,9 @@ export function App() {
         trip.id === selectedTripId ? { ...trip, status: nextStatus } : trip
       )
     )
+
+    toast.success('Viaje actualizado', { description: `Nuevo estado: ${nextStatus}` })
+    void hydrateDashboardData()
   }
 
   const categoryMap: Record<CostKey, string> = {
@@ -215,7 +217,7 @@ export function App() {
         amountGtq: parsedAmount
       })
     } catch {
-      // silently allow local update
+      toast.error('No se pudo sincronizar el gasto; se guardó localmente')
     }
 
     setCostState((previous) => ({
@@ -234,19 +236,23 @@ export function App() {
 
     setExpenseAmount('')
     setExpenseLabel('')
+    toast.success('Gasto registrado', { description: `${formatMoney(parsedAmount)} en ${expenseCategory}` })
+    void hydrateDashboardData()
   }
 
   const markMaintenanceComplete = async (maintenanceId: string) => {
     try {
       await apiClient.completeMaintenanceTask(maintenanceId, {})
     } catch {
-      // silently allow local update
+      toast.error('El mantenimiento se marcó localmente, pero no se sincronizó')
     }
     setMaintenanceState((previous) =>
       previous.map((item) =>
         item.id === maintenanceId ? { ...item, status: 'completado', dueInKm: 0 } : item
       )
     )
+    toast.success('Mantenimiento completado')
+    void hydrateDashboardData()
   }
 
   const reassignPilot = async () => {
@@ -257,7 +263,7 @@ export function App() {
     try {
       await apiClient.assignTruckToPilot(selectedPilotId, selectedTruckId)
     } catch {
-      // silently allow local update
+      toast.error('La reasignación se aplicó localmente, pero no se sincronizó')
     }
 
     setPilotState((currentPilots) =>
@@ -265,6 +271,8 @@ export function App() {
         pilot.id === selectedPilotId ? { ...pilot, assignedTruckId: selectedTruckId } : pilot
       )
     )
+    toast.success('Piloto reasignado')
+    void hydrateDashboardData()
   }
 
   const reportOfflineIncident = async () => {
@@ -279,7 +287,7 @@ export function App() {
       }) as { id: string }
       newAlertId = created.id
     } catch {
-      // silently allow local update
+      toast.error('La incidencia se creó localmente, pero no se sincronizó')
     }
 
     setAlertState((currentAlerts) => [
@@ -301,12 +309,27 @@ export function App() {
         state: 'offline'
       }
     ])
+    toast.success('Incidencia offline registrada')
+    void hydrateDashboardData()
   }
 
-  const updateFuelPrice = () => {
+  const updateFuelPrice = async () => {
     const parsedPrice = Number(newFuelPrice)
     if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
       return
+    }
+
+    try {
+      await apiClient.recordFuel({
+        truckId: fleetState[0]?.id,
+        station: selectedFuelStation,
+        dieselPriceGtq: parsedPrice,
+        gallonsDispensed: 1,
+        totalCostGtq: parsedPrice,
+        recordedAt: new Date().toISOString()
+      })
+    } catch {
+      toast.error('No se pudo sincronizar el precio de combustible')
     }
 
     setFuelState((currentFuel) =>
@@ -318,14 +341,30 @@ export function App() {
     )
 
     setNewFuelPrice('')
+    toast.success('Precio de combustible actualizado')
+    void hydrateDashboardData()
   }
 
-  const updateFleetStatus = () => {
+  const updateFleetStatus = async () => {
+    if (!selectedFleetTruckId) {
+      return
+    }
+
+    try {
+      await apiClient.updateTruck(selectedFleetTruckId, { status: selectedFleetStatus })
+    } catch {
+      toast.error('No se pudo sincronizar el estado de la unidad')
+    }
+
     setFleetState((currentFleet) =>
       currentFleet.map((truck) =>
         truck.id === selectedFleetTruckId ? { ...truck, status: selectedFleetStatus } : truck
       )
     )
+
+    toast.success('Estado de la unidad actualizado')
+
+    void hydrateDashboardData()
   }
 
   const simulateExport = (reportName: string) => {
@@ -351,76 +390,50 @@ export function App() {
   }
 
   return (
-    <main className="app-shell">
-      <header className="top-nav">
-        <div className="nav-brand">SCG Demo</div>
-        <nav className="nav-links">
-          {tabs.map((tabId) => (
-            <button
-              key={tabId}
-              type="button"
-              className={`nav-link ${activeTab === tabId ? 'nav-link-active' : ''}`}
-              onClick={() => setActiveTab(tabId)}
-            >
-              {tabLabelMap[tabId]}
-            </button>
-          ))}
-        </nav>
-      </header>
+    <div className="layout-shell">
+      <Toaster position="bottom-right" richColors />
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <header className="hero">
-        <div>
-          <h1>Sistema de Control de Gastos</h1>
-        </div>
-        <div className="hero-status">
-          <strong>Flota: {fleetState.length} unidades</strong>
-          <button
-            type="button"
-            className="mini-btn"
-            onClick={() => setIsOfflineMode((previous) => !previous)}
-          >
-            {isOfflineMode ? 'Modo Offline: ON' : 'Modo Offline: OFF'}
-          </button>
-        </div>
-      </header>
+      <div className="content-shell">
+        <Topbar
+          title={tabLabelMap[activeTab]}
+          onMenuClick={() => setSidebarOpen((previous) => !previous)}
+          offlineMode={isOfflineMode}
+          onToggleOffline={() => setIsOfflineMode((previous) => !previous)}
+        />
 
-      {isLoadingData && <section className="card"><strong>Cargando datos reales...</strong></section>}
-      {!isLoadingData && loadError && <section className="card"><strong>Fallo de carga:</strong> {loadError}</section>}
+        <section className="hero">
+          <div>
+            <h1>Sistema de Control de Gastos</h1>
+            <p>Control operacional de flota, pilotos, viajes y costos.</p>
+          </div>
+          <div className="hero-status">
+            <strong>Flota: {fleetState.length} unidades</strong>
+            <small>{isOfflineMode ? 'Modo local activo' : 'Conectado al backend'}</small>
+          </div>
+        </section>
+
+        {isLoadingData && <section className="card"><strong>Cargando datos reales...</strong></section>}
+        {!isLoadingData && loadError && <section className="card"><strong>Fallo de carga:</strong> {loadError}</section>}
 
       {activeTab === 'dashboard' && (
         <>
           <section className="kpi-grid">
-            <article className="card">
-              <h2>Viajes activos</h2>
-              <p className="kpi-value">{activeTrips}</p>
-            </article>
-            <article className="card">
-              <h2>Camiones activos</h2>
-              <p className="kpi-value">{activeTrucks} / 25+</p>
-            </article>
-            <article className="card">
-              <h2>Costo mensual</h2>
-              <p className="kpi-value">{formatMoney(totalCost)}</p>
-            </article>
-            <article className="card">
-              <h2>Precio diesel (máximo)</h2>
-              <p className="kpi-value">{formatMoney(highestFuelPriceGTQ)}</p>
-            </article>
-            <article className="card">
-              <h2>Mantenimientos pendientes</h2>
-              <p className="kpi-value">{maintenanceCount}</p>
-            </article>
-            <article className="card">
-              <h2>Riesgo conectividad</h2>
-              <p className="kpi-value">{connectivityRisk}</p>
-            </article>
+            <KpiCard title="Viajes activos" value={activeTrips} subtitle="en operación" icon={<Route size={18} />} accent />
+            <KpiCard title="Camiones activos" value={`${activeTrucks} / ${fleetState.length}`} subtitle="disponibles hoy" icon={<Truck size={18} />} />
+            <KpiCard title="Costo mensual" value={formatMoney(totalCost)} subtitle="acumulado del mes" icon={<DollarSign size={18} />} />
+            <KpiCard title="Precio diesel máximo" value={formatMoney(maxFuelValue)} subtitle="referencia actual" icon={<Fuel size={18} />} />
+            <KpiCard title="Mantenimientos pendientes" value={maintenanceCount} subtitle="por resolver" icon={<Wrench size={18} />} />
+            <KpiCard title="Riesgo conectividad" value={connectivityRisk} subtitle="alertas críticas" icon={<AlertTriangle size={18} />} />
           </section>
+
+          <DashboardCharts costState={costState} tripState={tripState} />
 
           <section className="two-col">
             <article className="card">
               <h2>Radar de precios de combustible</h2>
               <div className="fuel-bars">
-                {fuelSnapshots.map((snapshot) => (
+                {fuelState.map((snapshot) => (
                   <div key={snapshot.station} className="fuel-row">
                     <span>{snapshot.station}</span>
                     <div className="bar-track">
@@ -521,7 +534,7 @@ export function App() {
                     <td>{trip.origin} → {trip.destination}</td>
                     <td>{trip.driver}</td>
                     <td>{trip.distanceKm}</td>
-                    <td>{trip.status}</td>
+                    <td><StatusBadge status={trip.status} variant="trip" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -641,7 +654,7 @@ export function App() {
                   <tr key={task.id}>
                     <td>{task.truckPlate}</td>
                     <td>{task.type}</td>
-                    <td>{task.status}</td>
+                    <td><StatusBadge status={task.status} variant="maintenance" /></td>
                     <td>{task.dueInKm === 0 ? 'inmediato' : `${task.dueInKm} km`}</td>
                     <td>
                       {task.status !== 'completado' && (
@@ -689,7 +702,7 @@ export function App() {
                     <td>{truck.plate}</td>
                     <td>{truck.model}</td>
                     <td>{truck.fuelKmPerGallon} km/gal</td>
-                    <td>{truck.status}</td>
+                    <td><StatusBadge status={truck.status} variant="truck" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -933,6 +946,8 @@ export function App() {
           </article>
         </section>
       )}
-    </main>
+      </div>
+      <div className={`sidebar-backdrop ${sidebarOpen ? 'sidebar-backdrop-visible' : ''}`} onClick={() => setSidebarOpen(false)} />
+    </div>
   )
 }

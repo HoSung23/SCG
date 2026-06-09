@@ -1,0 +1,8 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'supabase/functions/*'
+  - 'web'
+  - 'mobile'
+  - 'electron'
+  - 'backend'

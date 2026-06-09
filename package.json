@@ -2,21 +2,34 @@
   "name": "scg-monorepo",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "pnpm@9.12.3",
   "workspaces": [
     "web",
     "mobile",
     "electron",
-    "backend"
+    "backend",
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "install:all": "npm install --workspaces",
+    "dev": "turbo run dev --parallel",
     "dev:web": "npm run dev --workspace web",
     "dev:mobile": "npm run dev --workspace mobile",
     "dev:electron": "npm run dev --workspace electron",
     "dev:backend": "npm run dev --workspace backend",
+    "dev:local": "concurrently \"npm run dev:backend\" \"npm run dev:web\"",
+    "dev:turbo": "turbo run dev --parallel",
     "build:web": "npm run build --workspace web",
     "build:backend": "npm run build --workspace backend",
+    "build": "turbo run build",
     "preview:web": "npm run preview --workspace web",
-    "start:backend": "npm run start --workspace backend"
+    "start:backend": "npm run start --workspace backend",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "turbo": "^2.0.12"
   }
 }
