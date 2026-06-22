@@ -2,12 +2,37 @@
   "name": "scg-electron",
   "private": true,
   "version": "0.1.0",
+  "description": "SCG Transporte GT desktop app",
+  "author": "SCG",
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder --win portable",
+    "dist": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.scg.transporte",
+    "productName": "SCG Transporte GT",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "electronVersion": "31.1.0",
+    "files": [
+      "main.js"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web-dist"
+      }
+    ],
+    "win": {
+      "target": "portable"
+    }
   },
   "devDependencies": {
-    "electron": "^31.1.0"
+    "electron": "31.1.0",
+    "electron-builder": "^24.13.3"
   }
 }

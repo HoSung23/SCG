@@ -3,10 +3,16 @@ web/node_modules/
 mobile/node_modules/
 electron/node_modules/
 web/dist/
+backend/dist/
 mobile/.expo/
 mobile/.expo-shared/
 mobile/dist/
 electron/dist/
+electron/dist-electron/
+dist-electron/
 .DS_Store
 .env
 .env.*
+*.tsbuildinfo
+backend/.gmail-sync-state.json
+sprint_plan_text.txt

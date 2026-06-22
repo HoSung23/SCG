@@ -3,6 +3,8 @@ import cors from 'cors'
 import 'express-async-errors'
 import dotenv from 'dotenv'
 import { testSupabaseConnection } from './utils/supabase.js'
+import { runGmailWatchLoop } from './services/gmailWatch.js'
+import authRoutes from './routes/auth.js'
 import truckRoutes from './routes/trucks.js'
 import pilotRoutes from './routes/pilots.js'
 import tripRoutes from './routes/trips.js'
@@ -16,6 +18,11 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 3000
 
+function shouldStartGmailWatch() {
+  const flag = (process.env.GMAIL_WATCH_ON_START ?? 'true').toLowerCase()
+  return flag === 'true'
+}
+
 // Middleware
 app.use(cors())
 app.use(express.json())
@@ -26,6 +33,7 @@ app.get('/health', (req, res) => {
 })
 
 // API Routes
+app.use('/api/auth', authRoutes)
 app.use('/api/trucks', truckRoutes)
 app.use('/api/pilots', pilotRoutes)
 app.use('/api/trips', tripRoutes)
@@ -52,6 +60,17 @@ async function start() {
     app.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}`)
       console.log(`✓ API docs: http://localhost:${PORT}/health`)
+
+      if (shouldStartGmailWatch()) {
+        runGmailWatchLoop({
+          onLog: (message) => console.log(`[gmail-watch] ${message}`),
+          onError: (message) => console.error(`[gmail-watch] ${message}`)
+        }).catch((error) => {
+          console.error('[gmail-watch] startup error:', error instanceof Error ? error.message : error)
+        })
+      } else {
+        console.log('[gmail-watch] deshabilitado por GMAIL_WATCH_ON_START=false')
+      }
     })
   } catch (error) {
     console.error('Failed to start server:', error)

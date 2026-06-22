@@ -5,6 +5,9 @@ const path = require('path')
 const WEB_DEV_URL = process.env.SCG_WEB_URL || 'http://localhost:5173'
 const DEV_URL_CANDIDATES = Array.from(new Set([WEB_DEV_URL, 'http://localhost:5173', 'http://localhost:5174']))
 const WEB_DIST_INDEX = path.join(__dirname, '../web/dist/index.html')
+const PACKAGED_WEB_INDEX = app.isPackaged
+  ? path.join(process.resourcesPath, 'web-dist', 'index.html')
+  : WEB_DIST_INDEX
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds))
 
@@ -102,7 +105,17 @@ async function createWindow() {
     return
   }
 
-  win.loadFile(WEB_DIST_INDEX)
+  if (existsSync(PACKAGED_WEB_INDEX)) {
+    await win.loadFile(PACKAGED_WEB_INDEX)
+    return
+  }
+
+  if (existsSync(WEB_DIST_INDEX)) {
+    await win.loadFile(WEB_DIST_INDEX)
+    return
+  }
+
+  await win.loadURL(buildFallbackHtml(WEB_DEV_URL))
 }
 
 app.whenReady().then(() => {

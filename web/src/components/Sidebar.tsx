@@ -34,12 +34,14 @@ export function Sidebar({
   activeTab,
   onTabChange,
   open,
-  onClose
+  onClose,
+  onLogout
 }: {
   activeTab: TabId
   onTabChange: (tab: TabId) => void
   open: boolean
   onClose?: () => void
+  onLogout: () => void
 }) {
   return (
     <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
@@ -77,6 +79,19 @@ export function Sidebar({
           <strong>Admin SCG</strong>
           <p>superadmin</p>
         </div>
+      </div>
+
+      <div style={{ padding: '0 1rem 1rem' }}>
+        <button
+          type="button"
+          className="mini-btn"
+          onClick={() => {
+            onLogout()
+            onClose?.()
+          }}
+        >
+          Cerrar sesión
+        </button>
       </div>
     </aside>
   )

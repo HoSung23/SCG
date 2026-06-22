@@ -56,7 +56,36 @@ SUPABASE_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 PORT=3000
 NODE_ENV=development
+
+# Gmail sync
+GMAIL_CLIENT_ID=...
+GMAIL_CLIENT_SECRET=...
+GMAIL_REFRESH_TOKEN=...
+GMAIL_USER_ID=me
+GMAIL_QUERY=subject:"Reporte" newer_than:7d
+GMAIL_MESSAGE_ID=
+GMAIL_COLUMN_MAP={"fecha":"recorded_at","total":"amount_gtq"}
+SUPABASE_DESTINATION_TABLE=nombre_de_tu_tabla
+SUPABASE_UPSERT=false
+SUPABASE_UPSERT_COLUMNS=id
 ```
+
+### 3.1 Configurar Gmail API
+
+Para extraer una tabla desde un correo de Gmail necesitas credenciales OAuth2:
+
+1. Crea un proyecto en Google Cloud.
+2. Habilita la **Gmail API**.
+3. Crea credenciales OAuth 2.0.
+4. Genera un `refresh token` con acceso a `https://www.googleapis.com/auth/gmail.readonly`.
+5. Coloca `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` y `GMAIL_REFRESH_TOKEN` en tu `.env`.
+
+La sincronización funciona de dos maneras:
+
+- **Por búsqueda**: define `GMAIL_QUERY` y el script tomará el correo más reciente que coincida.
+- **Por ID exacto**: define `GMAIL_MESSAGE_ID` si ya conoces el mensaje.
+
+Si la tabla del correo no usa los mismos nombres de columnas que Supabase, usa `GMAIL_COLUMN_MAP` con JSON. El script normaliza los encabezados de la tabla a minúsculas con `_`.
 
 ### 3. Crear tablas en Supabase
 
@@ -248,6 +277,18 @@ npm run build:backend
 
 # Producción
 npm run start:backend
+
+# Sync Gmail -> Supabase desde la tabla de un correo
+npm run sync:gmail-table
+```
+
+Ejemplo rápido:
+
+```powershell
+cd c:\Users\yoshi\Desktop\SCG\backend
+$env:GMAIL_QUERY='subject:"Reporte" newer_than:7d'
+$env:SUPABASE_DESTINATION_TABLE='cost_records'
+npm run sync:gmail-table
 ```
 
 ## API Endpoints

@@ -1,4 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_ENV_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
+const normalizedEnvUrl = API_ENV_URL.replace(/\/$/, '')
+const hasApiSuffix = /\/api$/i.test(normalizedEnvUrl)
+
+export const API_BASE_URL = hasApiSuffix
+  ? normalizedEnvUrl
+  : `${normalizedEnvUrl}/api`
 
 export class ApiClient {
   private baseUrl: string

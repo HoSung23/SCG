@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/mockdata.ts","./src/types.ts","./src/components/kpicard.tsx","./src/components/sidebar.tsx","./src/components/statusbadge.tsx","./src/components/topbar.tsx","./src/components/charts/dashboardcharts.tsx","./src/services/api.ts","./src/services/dashboarddata.ts"],"version":"5.9.3"}
