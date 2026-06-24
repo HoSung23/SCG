@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron')
+const { spawn } = require('child_process')
 const { existsSync } = require('fs')
 const path = require('path')
 
@@ -8,6 +9,90 @@ const WEB_DIST_INDEX = path.join(__dirname, '../web/dist/index.html')
 const PACKAGED_WEB_INDEX = app.isPackaged
   ? path.join(process.resourcesPath, 'web-dist', 'index.html')
   : WEB_DIST_INDEX
+
+const DEFAULT_WATCH_POLL_SECONDS = '43200'
+
+let backendProcess = null
+let backendProcessStarted = false
+
+function resolveBackendRuntimePaths() {
+  if (app.isPackaged) {
+    const backendRoot = path.join(process.resourcesPath, 'backend')
+    return {
+      backendRoot,
+      backendEntry: path.join(backendRoot, 'dist', 'index.js')
+    }
+  }
+
+  const backendRoot = path.join(__dirname, '../backend')
+  return {
+    backendRoot,
+    backendEntry: path.join(backendRoot, 'dist', 'index.js')
+  }
+}
+
+function startBackendProcess() {
+  if (backendProcessStarted) {
+    return
+  }
+
+  const { backendRoot, backendEntry } = resolveBackendRuntimePaths()
+
+  if (!existsSync(backendEntry)) {
+    console.warn(`[backend] No se encontró backend compilado: ${backendEntry}`)
+    return
+  }
+
+  backendProcessStarted = true
+
+  const env = {
+    ...process.env,
+    ELECTRON_RUN_AS_NODE: '1',
+    GMAIL_WATCH_ON_START: process.env.GMAIL_WATCH_ON_START ?? 'true',
+    GMAIL_WATCH_POLL_SECONDS: process.env.GMAIL_WATCH_POLL_SECONDS ?? DEFAULT_WATCH_POLL_SECONDS
+  }
+
+  backendProcess = spawn(process.execPath, [backendEntry], {
+    cwd: backendRoot,
+    env,
+    windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe']
+  })
+
+  backendProcess.stdout?.on('data', (chunk) => {
+    const message = chunk.toString().trim()
+    if (message) {
+      console.log(`[backend] ${message}`)
+    }
+  })
+
+  backendProcess.stderr?.on('data', (chunk) => {
+    const message = chunk.toString().trim()
+    if (message) {
+      console.error(`[backend] ${message}`)
+    }
+  })
+
+  backendProcess.on('exit', (code, signal) => {
+    console.log(`[backend] Finalizó (code=${code ?? 'null'}, signal=${signal ?? 'null'})`)
+    backendProcess = null
+    backendProcessStarted = false
+  })
+
+  backendProcess.on('error', (error) => {
+    console.error('[backend] Error iniciando proceso:', error)
+    backendProcess = null
+    backendProcessStarted = false
+  })
+}
+
+function stopBackendProcess() {
+  if (!backendProcess || backendProcess.killed) {
+    return
+  }
+
+  backendProcess.kill('SIGTERM')
+}
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds))
 
@@ -119,6 +204,7 @@ async function createWindow() {
 }
 
 app.whenReady().then(() => {
+  startBackendProcess()
   createWindow()
 
   app.on('activate', () => {
@@ -129,7 +215,12 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  stopBackendProcess()
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+app.on('before-quit', () => {
+  stopBackendProcess()
 })

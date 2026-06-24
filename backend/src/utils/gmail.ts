@@ -53,7 +53,7 @@ export function createGmailClient(options: GmailClientOptions) {
   const oauth2Client = new google.auth.OAuth2(options.clientId, options.clientSecret)
   oauth2Client.setCredentials({ refresh_token: options.refreshToken })
 
-  return google.gmail({ version: 'v1', auth: oauth2Client, userAgent: 'SCG Gmail Table Sync' })
+  return google.gmail({ version: 'v1', auth: oauth2Client })
 }
 
 export async function findLatestMessageId(gmail: gmail_v1.Gmail, userId: string, query: string) {

@@ -1,0 +1,96 @@
+{
+  "pages": {
+    "/_not-found/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/_not-found/page-87dd1acf5c8687c5.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/css/c60cb09f42fae219.css",
+      "static/chunks/app/layout-94efc074a8eee345.js"
+    ],
+    "/(auth)/login/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(auth)/login/page-9e8e9dba954fa22a.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/page-d2425738b686d7bc.js"
+    ],
+    "/(dashboard)/configuracion/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/configuracion/page-e86b57097dfb07ee.js"
+    ],
+    "/(dashboard)/layout": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/layout-b1e383ec5cb39483.js"
+    ],
+    "/(dashboard)/costos/combustible/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/costos/combustible/page-1b25db48c8625cee.js"
+    ],
+    "/(dashboard)/costos/generales/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/costos/generales/page-3348bff8860585ae.js"
+    ],
+    "/(dashboard)/costos/mantenimiento/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/costos/mantenimiento/page-ca1d227f63ce649d.js"
+    ],
+    "/(dashboard)/flota/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/flota/page-f44b925ae0a616d9.js"
+    ],
+    "/(dashboard)/viajes/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/viajes/page-5afbcc4ba7eb0ba0.js"
+    ],
+    "/(dashboard)/reportes/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/reportes/page-1a97d2be3fbf58ea.js"
+    ],
+    "/(dashboard)/pilotos/page": [
+      "static/chunks/webpack-879f858537244e02.js",
+      "static/chunks/fd9d1056-2821b0f0cabcd8bd.js",
+      "static/chunks/23-6f47427715ac8aa3.js",
+      "static/chunks/main-app-fafc46051365ab9f.js",
+      "static/chunks/app/(dashboard)/pilotos/page-2b18176288aac081.js"
+    ]
+  }
+}

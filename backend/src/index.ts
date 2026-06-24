@@ -12,6 +12,10 @@ import maintenanceRoutes from './routes/maintenance.js'
 import fuelRoutes from './routes/fuel.js'
 import costRoutes from './routes/costs.js'
 import alertRoutes from './routes/alerts.js'
+import clientRoutes from './routes/clients.js'
+import materialRoutes from './routes/materials.js'
+import programacionRoutes from './routes/programacion.js'
+import fuelPricesRoutes from './routes/fuelPrices.js'
 
 dotenv.config()
 
@@ -41,6 +45,10 @@ app.use('/api/maintenance', maintenanceRoutes)
 app.use('/api/fuel', fuelRoutes)
 app.use('/api/costs', costRoutes)
 app.use('/api/alerts', alertRoutes)
+app.use('/api/clients', clientRoutes)
+app.use('/api/materials', materialRoutes)
+app.use('/api/programacion', programacionRoutes)
+app.use('/api/fuel-prices', fuelPricesRoutes)
 
 // Error handler
 app.use((err: any, req: any, res: any, next: any) => {

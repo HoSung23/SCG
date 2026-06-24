@@ -1,6 +1,6 @@
 import { apiClient } from './api'
 import { alerts as mockAlerts, fuelSnapshots as mockFuelSnapshots, monthlyCosts as mockMonthlyCosts, maintenanceQueue as mockMaintenanceQueue, routeTimeline as mockRouteTimeline } from '../mockData'
-import type { AlertItem, CostSummary, FuelSnapshot, MaintenanceTask, Pilot, RouteTimeline, Trip, Truck } from '../types'
+import type { AlertItem, CostSummary, FuelRecord, FuelSnapshot, MaintenanceTask, Pilot, RouteTimeline, Trip, Truck } from '../types'
 
 type BackendTruck = {
   id: string
@@ -27,7 +27,31 @@ type BackendTrip = {
   destination: string
   distance_km: number
   status: 'programado' | 'en-ruta' | 'completado' | 'cancelado'
+  started_at?: string | null
+  completed_at?: string | null
+  fuel_consumption_gallons?: number | null
+  cost_gtq?: number | null
+  km_reales?: number | null
+  estimated_time_hours?: number | null
   created_at?: string
+}
+
+type BackendProgramacion = {
+  id: string
+  status: 'programado' | 'asignado' | 'completado' | 'cancelado'
+  fecha_programacion?: string | null
+  created_at?: string | null
+  assigned_at?: string | null
+  trip_id?: string | null
+  pilot_id?: string | null
+  truck_id?: string | null
+  codigo?: string | null
+  nombre?: string | null
+  transportista?: string | null
+  material?: string | null
+  pedido?: string | null
+  entrega?: string | null
+  transporte?: string | null
 }
 
 type BackendMaintenanceTask = {
@@ -42,8 +66,12 @@ type BackendMaintenanceTask = {
 
 type BackendFuelRecord = {
   id: string
+  truck_id: string
   station: string
   diesel_price_gtq: number
+  gallons_dispensed?: number | null
+  total_cost_gtq?: number | null
+  meter_km?: number | null
   recorded_at: string
 }
 
@@ -60,15 +88,27 @@ type BackendAlert = {
   detail: string
 }
 
+type BackendMemFuelPrice = {
+  date: string
+  dieselPrecio: number
+  gasolinaRegular: number
+  gasolinaSuper: number
+  kerosene: number
+  lastUpdated: string
+}
+
 export type DashboardData = {
   fleet: Truck[]
   pilots: Pilot[]
   trips: Trip[]
   maintenanceQueue: MaintenanceTask[]
+  fuelRecords: FuelRecord[]
   fuelSnapshots: FuelSnapshot[]
   monthlyCosts: CostSummary
   alerts: AlertItem[]
   routeTimeline: RouteTimeline[]
+  programaciones: BackendProgramacion[]
+  memFuelPrice: BackendMemFuelPrice | null
 }
 
 const mapTruck = (truck: BackendTruck): Truck => ({
@@ -92,10 +132,29 @@ const mapTrip = (trip: BackendTrip, pilotName: string): Trip => ({
   origin: trip.origin,
   destination: trip.destination,
   driver: pilotName,
+  pilotId: trip.pilot_id,
   truckId: trip.truck_id,
   distanceKm: Number(trip.distance_km),
   status: trip.status === 'cancelado' ? 'programado' : trip.status,
-  date: trip.created_at ? trip.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10)
+  date: trip.created_at ? trip.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
+  startedAt: trip.started_at ?? undefined,
+  completedAt: trip.completed_at ?? undefined,
+  fuelConsumptionGallons: trip.fuel_consumption_gallons ?? undefined,
+  costGtq: trip.cost_gtq ?? undefined,
+  actualDistanceKm: trip.km_reales ?? undefined,
+  estimatedTimeHours: trip.estimated_time_hours ?? undefined
+})
+
+const mapFuelRecord = (record: BackendFuelRecord): FuelRecord => ({
+  id: record.id,
+  truckId: record.truck_id,
+  station: record.station,
+  dieselPriceGtq: Number(record.diesel_price_gtq),
+  gallonsDispensed: Number(record.gallons_dispensed ?? 0),
+  totalCostGtq: Number(record.total_cost_gtq ?? 0),
+  meterKm: record.meter_km ?? undefined,
+  recordedAt: record.recorded_at,
+  notes: undefined
 })
 
 const mapMaintenance = (task: BackendMaintenanceTask, truckPlate: string): MaintenanceTask => ({
@@ -151,14 +210,16 @@ const mapAlerts = (items: BackendAlert[]): AlertItem[] =>
   }))
 
 export async function loadDashboardData(): Promise<DashboardData> {
-  const [trucks, pilots, trips, maintenanceTasks, fuelRecords, costRecords, alerts] = await Promise.all([
+  const [trucks, pilots, trips, maintenanceTasks, fuelRecords, costRecords, alerts, programaciones, memFuelPrice] = await Promise.all([
     apiClient.getTrucks(),
     apiClient.getPilots(),
     apiClient.getTrips(),
     apiClient.getMaintenanceTasks(),
     apiClient.getFuelRecords(),
     apiClient.getCostRecords(),
-    apiClient.getAlerts()
+    apiClient.getAlerts(),
+    apiClient.getProgramaciones(),
+    apiClient.getMemFuelPriceToday().catch(() => null)
   ])
 
   const truckMap = new Map<string, BackendTruck>((trucks as BackendTruck[]).map((truck) => [truck.id, truck]))
@@ -170,6 +231,8 @@ export async function loadDashboardData(): Promise<DashboardData> {
   const mappedMaintenance = (maintenanceTasks as BackendMaintenanceTask[]).map((task) =>
     mapMaintenance(task, truckMap.get(task.truck_id)?.plate ?? 'Sin placa')
   )
+  const mappedFuelRecords = (fuelRecords as BackendFuelRecord[]).map(mapFuelRecord)
+  const mappedProgramaciones = (programaciones as BackendProgramacion[]) || []
 
   const mappedFuelSnapshots = mapFuelSnapshots(fuelRecords as BackendFuelRecord[])
   const mappedCosts = mapCostSummary(costRecords as BackendCostRecord[])
@@ -180,9 +243,12 @@ export async function loadDashboardData(): Promise<DashboardData> {
     pilots: mappedPilots.length > 0 ? mappedPilots : [],
     trips: mappedTrips.length > 0 ? mappedTrips : [],
     maintenanceQueue: mappedMaintenance.length > 0 ? mappedMaintenance : mockMaintenanceQueue,
+    fuelRecords: mappedFuelRecords,
     fuelSnapshots: mappedFuelSnapshots.length > 0 ? mappedFuelSnapshots : mockFuelSnapshots,
     monthlyCosts: mappedCosts.fuel + mappedCosts.maintenance + mappedCosts.payroll + mappedCosts.admin > 0 ? mappedCosts : mockMonthlyCosts,
     alerts: mappedAlerts.length > 0 ? mappedAlerts : mockAlerts,
-    routeTimeline: mockRouteTimeline
+    routeTimeline: mockRouteTimeline,
+    programaciones: mappedProgramaciones,
+    memFuelPrice: (memFuelPrice as BackendMemFuelPrice | null) ?? null
   }
 }

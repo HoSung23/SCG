@@ -1,58 +1,77 @@
-import React from 'react'
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { StatusBar } from 'expo-status-bar'
+import React, { useState, useEffect } from 'react'
+import { View } from 'react-native'
+import { NavigationContainer } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/stack'
+import { supabase } from './supabaseClient'
+import LoginScreen from './screens/LoginScreen'
+import TripsScreen from './screens/TripsScreen'
 
-const actions = [
-  'Iniciar viaje (foto + GPS)',
-  'Finalizar viaje (evidencia)',
-  'Reportar incidencia',
-  'Modo contingencia offline'
-]
+const Stack = createNativeStackNavigator()
 
 export default function App() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>SCG Piloto — Demo Base</Text>
-        <Text style={styles.subtitle}>Estructura inicial Expo para Android/iOS.</Text>
+  const [user, setUser] = useState(null)
+  const [pilot, setPilot] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-        {actions.map((action) => (
-          <View key={action} style={styles.card}>
-            <Text style={styles.cardText}>{action}</Text>
-          </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+  useEffect(() => {
+    // Verificar sesión existente
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        // Aquí podrías cargar los datos del piloto
+      } else {
+        setUser(null)
+        setPilot(null)
+      }
+      setLoading(false)
+    })
+  }, [])
+
+  const handleLoginSuccess = (newUser, pilotData) => {
+    setUser(newUser)
+    setPilot(pilotData)
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    setPilot(null)
+  }
+
+  if (loading) {
+    return <View style={{ flex: 1, backgroundColor: '#0f172a' }} />
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animationEnabled: true
+        }}
+      >
+        {user && pilot ? (
+          <Stack.Screen
+            name="Trips"
+            options={{ animationEnabled: false }}
+          >
+            {(props) => (
+              <TripsScreen
+                {...props}
+                pilot={pilot}
+                user={user}
+                onLogout={handleLogout}
+              />
+            )}
+          </Stack.Screen>
+        ) : (
+          <Stack.Screen
+            name="Login"
+            options={{ animationEnabled: false }}
+          >
+            {(props) => <LoginScreen {...props} onLoginSuccess={handleLoginSuccess} />}
+          </Stack.Screen>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a'
-  },
-  content: {
-    padding: 20,
-    gap: 12
-  },
-  title: {
-    color: '#f8fafc',
-    fontSize: 24,
-    fontWeight: '700'
-  },
-  subtitle: {
-    color: '#cbd5e1',
-    marginBottom: 8
-  },
-  card: {
-    backgroundColor: '#1e293b',
-    borderColor: '#334155',
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 14
-  },
-  cardText: {
-    color: '#e2e8f0'
-  }
-})

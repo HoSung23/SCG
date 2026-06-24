@@ -24,6 +24,17 @@ Supabase PostgreSQL
 Frontend (React + Vite)
 ```
 
+**Sistema de Identificación de Unidades (Camiones)**
+- Cada camión tiene un `codigo` único (ej: `T-000001`) que es el identificador principal en todo el sistema
+- En lugar de usar `truck_id` (UUID), usamos `truck_codigo` (texto) para:
+  - Viajes (`trips.truck_codigo`)
+  - Mantenimiento (`maintenance_costs.truck_codigo`)
+  - Costos (`general_costs.truck_codigo`)
+  - Incidentes (`incidents.truck_codigo`)
+  - Fuel records (`fuel_prices.truck_codigo`)
+  - Programación (`programacion.truck_codigo`)
+- Esto permite referencias más legibles y un seguimiento más sencillo de la flota
+
 ## Requisitos previos
 
 1. **Cuenta Supabase**: https://supabase.com
@@ -282,6 +293,20 @@ npm run start:backend
 npm run sync:gmail-table
 ```
 
+Para correr el watch de Gmail en el servidor con ventanas horarias (5pm y 10pm cada 15 minutos), configura en `.env`:
+
+```dotenv
+GMAIL_WATCH_ON_START=true
+GMAIL_WATCH_MODE=windowed-schedule
+GMAIL_WATCH_WINDOW_HOURS=17,22
+GMAIL_WATCH_WINDOW_INTERVAL_MINUTES=15
+```
+
+Notas:
+- El horario usa la **zona horaria local del servidor**.
+- Con esta configuración se ejecuta a `17:00, 17:15, 17:30, 17:45` y `22:00, 22:15, 22:30, 22:45`.
+- Si quieres el comportamiento anterior por polling continuo, usa `GMAIL_WATCH_MODE=poll`.
+
 Ejemplo rápido:
 
 ```powershell
@@ -306,9 +331,35 @@ npm run sync:gmail-table
 - `PUT /api/pilots/:id` - Actualizar
 - `POST /api/pilots/:id/assign-truck` - Asignar camión
 
+### Programación (Auto-Asignación por Código)
+- `GET /api/programacion` - Listar todas (filtros: `status`, `fecha`, `fechaInicio`, `fechaFin`)
+  - Ejemplo: `/api/programacion?fechaInicio=2026-06-01&fechaFin=2026-06-30&status=asignado`
+- `GET /api/programacion/:id` - Obtener con relaciones
+- `POST /api/programacion/:id/assign-pilot` - Asignar piloto manual
+  - Body: `{ pilotId, assignedBy? }`
+- `POST /api/programacion/:id/assign-truck` - Asignar camión por código
+  - Body: `{ truckCodigo, assignedBy? }`
+  - ⚠️ Usa `truck_codigo` (ej: `T-000001`), NO id
+- `POST /api/programacion/:id/generate-trip` - Generar viaje
+  - ⚠️ **Validación:** No permite crear viajes el domingo después de las 12:00pm
+- `POST /api/programacion/auto-assign/by-code` - Auto-asignar por código
+  - Body: `{ codigo, pilotName?, truckPlate? }`
+  - Busca piloto por nombre y camión por placa automáticamente
+- `POST /api/programacion/auto-assign/batch` - Auto-asignar múltiples
+  - Body: `{ codigos: ["COD-001", "COD-002"] }`
+- `POST /api/programacion/auto-assign/pending` - Auto-asignar todas las pendientes
+
+**Nota:** Cuando Gmail sync inserta programaciones, se activa auto-asignación automáticamente buscando:
+- Piloto: nombres en campos `nombre` o `transportista`
+- Camión: placa en campo `placa` → se convierte a `truck_codigo`
+- Si ambos se asignan, status cambia a `asignado` con timestamp
+
 ### Viajes
-- `GET /api/trips` - Listar
+- `GET /api/trips` - Listar todas (filtros: `fechaInicio`, `fechaFin`, `status`)
+  - Ejemplo: `/api/trips?fechaInicio=2026-06-01&fechaFin=2026-06-30&status=completado`
 - `POST /api/trips` - Crear
+  - Body: `{ truckCodigo, pilotId, origin, destination, distanceKm, estimatedTimeHours? }`
+  - ⚠️ Usa `truckCodigo` (ej: `T-000001`), NO truckId
 - `PUT /api/trips/:id/status` - Cambiar estado
 
 ### Mantenimiento
@@ -317,8 +368,39 @@ npm run sync:gmail-table
 - `PUT /api/maintenance/:id/complete` - Marcar completado
 
 ### Combustible
-- `GET /api/fuel` - Listar registros
-- `POST /api/fuel` - Registrar carga
+- `GET /api/fuel` - Listar registros de combustible
+- `POST /api/fuel` - Registrar carga de combustible
+  - Body:
+    ```json
+    {
+      "truckId": "uuid-del-camion",
+      "station": "Shell|UNO|Puma|Otro",
+      "dieselPriceGtq": 8.50,
+      "gallonsDispensed": 100,
+      "meterKm": 125000,
+      "serviceType": "pump|puma_credit",
+      "handlerCodigo": "EMP-001",
+      "handlerName": "Juan Pérez",
+      "creditVoucherNumber": "VALE-2026-0001",
+      "notes": "Carga de combustible",
+      "notesExtended": "Notas adicionales"
+    }
+    ```
+  - **Servicios disponibles:**
+    - `pump` — Bomba propia (no requiere `creditVoucherNumber`)
+    - `puma_credit` — Puma con vale de crédito (requiere `creditVoucherNumber`)
+  - `handlerCodigo` y `handlerName` identifican quién manejó el servicio
+
+#### Asignación automática de combustible diario
+- `POST /api/fuel/allocate/calculate` - Calcular galones para un camión específico
+  - Body: `{ truckCodigo, estimatedKm, fuelEfficiency? }`
+  - Retorna: galones necesarios con 10% de buffer
+  - Ejemplo: `{ truckCodigo: "T-000001", estimatedKm: 250 }` → 35 galones (con eficiencia 8km/gal)
+- `GET /api/fuel/allocate/today` - Obtener necesidades de combustible para todos los viajes de HOY
+  - Agrupa viajes por camión, suma km, calcula galones totales
+  - Ideal para generar lista de carga antes de salir del predio
+- `GET /api/fuel/allocate/report` - Generar reporte completo diario
+  - Detalle por camión, total de galones, timestamp de generación
 
 ### Costos
 - `GET /api/costs` - Listar

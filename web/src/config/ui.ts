@@ -2,12 +2,16 @@ import type { TabId } from '../views/types'
 
 export const tabLabelMap: Record<TabId, string> = {
   dashboard: 'Dashboard',
+  programacion: 'Programación',
   combustible: 'Combustible',
   viajes: 'Viajes',
   costos: 'Costos',
   mantenimiento: 'Mantenimiento',
   flota: 'Flota',
   pilotos: 'Pilotos',
+  homepiloto: 'Home Piloto',
+  clientes: 'Clientes',
+  materiales: 'Materiales',
   roles: 'Roles',
   mobile: 'Mobile',
   desktop: 'Desktop',

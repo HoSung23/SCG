@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react'
-import { toast } from 'sonner'
+import { sileo } from 'sileo'
 import { API_BASE_URL } from '../services/api'
 
 export type SessionUser = {
@@ -54,7 +54,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         role: data.user.role
       }
 
-      toast.success('Sesión iniciada', { description: `Bienvenido, ${nextSession.displayName}` })
+      sileo.success({ title: 'Sesión iniciada', description: `Bienvenido, ${nextSession.displayName}` })
       onLoginSuccess(nextSession)
     } catch {
       setError('No se pudo conectar con el backend')

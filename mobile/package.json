@@ -3,16 +3,40 @@
   "private": true,
   "version": "0.1.0",
   "main": "index.js",
+  "description": "App móvil React Native para pilotos - SCG (Sistema de Control de Gastos)",
   "scripts": {
     "dev": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "start": "expo start --dev-client",
+    "eject": "expo eject",
+    "prebuild": "expo prebuild --clean"
   },
+  "keywords": [
+    "react-native",
+    "expo",
+    "pilots",
+    "trips",
+    "logistics",
+    "supabase"
+  ],
+  "author": "SCG Team",
+  "license": "MIT",
   "dependencies": {
     "expo": "^51.0.28",
     "expo-status-bar": "~1.12.1",
+    "expo-location": "~16.5.5",
     "react": "18.2.0",
-    "react-native": "0.74.5"
+    "react-native": "0.74.5",
+    "react-native-screens": "~3.31.1",
+    "@react-navigation/native": "^6.1.10",
+    "@react-navigation/stack": "^6.3.20",
+    "react-native-safe-area-context": "4.8.2",
+    "react-native-gesture-handler": "~2.14.2",
+    "@supabase/supabase-js": "^2.39.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.5"
   }
 }

@@ -76,6 +76,23 @@ export async function getAllTrips() {
   return data as Trip[]
 }
 
+export async function getTripsByDateRange(startDate?: string, endDate?: string, status?: string) {
+  let query = supabaseAdmin
+    .from('trips')
+    .select('*')
+    .order('scheduled_start', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  if (startDate) query = query.gte('scheduled_start', `${startDate}T00:00:00`)
+  if (endDate) query = query.lte('scheduled_start', `${endDate}T23:59:59`)
+  if (status) query = query.eq('status', status)
+
+  const { data, error } = await query
+  if (error) throw error
+  return data as Trip[]
+}
+
 export async function getTripById(id: string) {
   const { data, error } = await supabaseAdmin.from('trips').select('*').eq('id', id).single()
   if (error) throw error

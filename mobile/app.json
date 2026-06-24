@@ -4,6 +4,43 @@
     "slug": "scg-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
-    "assetBundlePatterns": ["**/*"]
+    "icon": "./assets/icon.png",
+    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermissions": "Allow SCG to access your location"
+        }
+      ]
+    ],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.scg.mobile",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET"
+      ]
+    },
+    "ios": {
+      "supportsTabletMode": false,
+      "bundleIdentifier": "com.scg.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow SCG to access your location for tracking trips",
+        "NSLocationAlwaysUsageDescription": "Allow SCG to access your location for tracking trips"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
   }
 }

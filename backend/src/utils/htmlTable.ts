@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import type { Element } from 'domhandler'
 
 export type ParsedTable = {
   headers: string[]
@@ -34,7 +35,7 @@ function coerceCellValue(value: string) {
   return trimmed
 }
 
-function extractText(cell: cheerio.Cheerio<cheerio.Element>) {
+function extractText(cell: cheerio.Cheerio<Element>) {
   return cell
     .text()
     .replace(/\u00a0/g, ' ')
@@ -42,7 +43,7 @@ function extractText(cell: cheerio.Cheerio<cheerio.Element>) {
     .trim()
 }
 
-function parseTableElement($: cheerio.CheerioAPI, table: cheerio.Cheerio<cheerio.Element>): ParsedTable | null {
+function parseTableElement($: cheerio.CheerioAPI, table: cheerio.Cheerio<Element>): ParsedTable | null {
   const headerCells = table.find('tr').first().find('th,td')
   const headers = headerCells
     .map((index, element) => normalizeHeader(extractText($(element))) || `column_${index + 1}`)

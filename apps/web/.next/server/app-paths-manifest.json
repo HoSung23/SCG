@@ -1,0 +1,14 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/page": "app/page.js",
+  "/(dashboard)/configuracion/page": "app/(dashboard)/configuracion/page.js",
+  "/(dashboard)/costos/combustible/page": "app/(dashboard)/costos/combustible/page.js",
+  "/(dashboard)/costos/generales/page": "app/(dashboard)/costos/generales/page.js",
+  "/(dashboard)/costos/mantenimiento/page": "app/(dashboard)/costos/mantenimiento/page.js",
+  "/(dashboard)/flota/page": "app/(dashboard)/flota/page.js",
+  "/(dashboard)/viajes/page": "app/(dashboard)/viajes/page.js",
+  "/(dashboard)/reportes/page": "app/(dashboard)/reportes/page.js",
+  "/(dashboard)/pilotos/page": "app/(dashboard)/pilotos/page.js",
+  "/(dashboard)/page": "app/(dashboard)/page.js"
+}

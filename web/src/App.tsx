@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { toast, Toaster } from 'sonner'
+import { sileo, Toaster } from 'sileo'
 import { Sidebar } from './components/Sidebar'
 import { Topbar } from './components/Topbar'
 import { LoginScreen } from './components/LoginScreen'
@@ -7,8 +7,7 @@ import { HeroHeader } from './components/HeroHeader'
 import {
   fleet,
   fuelSnapshots,
-  roleMatrix,
-  trips
+  roleMatrix
 } from './mockData'
 import { tabLabelMap, roleModules } from './config/ui'
 import { useSessionState } from './hooks/useSessionState'
@@ -36,9 +35,6 @@ export function App() {
 
   // Additional local state for views not yet in dashboard hook
   const [isOfflineMode, setIsOfflineMode] = useState(false)
-  const [selectedTripId, setSelectedTripId] = useState(trips[0]?.id ?? '')
-  const [selectedFuelStation, setSelectedFuelStation] = useState(fuelSnapshots[0]?.station ?? 'Shell')
-  const [newFuelPrice, setNewFuelPrice] = useState('')
   const [exportLog, setExportLog] = useState<string[]>([])
   const [syncQueue, setSyncQueue] = useState(3)
 
@@ -53,7 +49,7 @@ export function App() {
     return (
       <>
         <LoginScreen onLoginSuccess={login} />
-        <Toaster />
+        <Toaster position="bottom-right" />
       </>
     )
   }
@@ -66,18 +62,18 @@ export function App() {
   const runSyncQueue = () => {
     if (syncQueue <= 0) return
     setSyncQueue(0)
-    toast.success('Sincronización completada')
+    sileo.success({ title: 'Sincronización completada' })
   }
 
   const handleLogout = () => {
     logout()
     setSidebarOpen(false)
-    toast('Sesión cerrada')
+    sileo.info({ title: 'Sesión cerrada' })
   }
 
   return (
     <div className="layout-shell">
-      <Toaster position="bottom-right" richColors />
+      <Toaster position="bottom-right" />
       <Sidebar
         activeTab={dashboard.activeTab as TabId}
         onTabChange={(tab) => dashboard.setActiveTab(tab as TabId)}
@@ -108,12 +104,6 @@ export function App() {
           formatMoney={formatMoney}
           fleetState={fleet}
           fuelState={fuelSnapshots}
-          selectedTripId={selectedTripId}
-          setSelectedTripId={setSelectedTripId}
-          selectedFuelStation={selectedFuelStation}
-          setSelectedFuelStation={setSelectedFuelStation}
-          newFuelPrice={newFuelPrice}
-          setNewFuelPrice={setNewFuelPrice}
           roleMatrix={roleMatrix}
           selectedRole={selectedRole}
           setSelectedRole={setSelectedRole}

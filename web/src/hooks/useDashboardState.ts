@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { loadDashboardData } from '../services/dashboardData'
-import type { AlertItem, CostSummary, FuelSnapshot, MaintenanceTask, Pilot, Trip, Truck } from '../types'
+import { apiClient } from '../services/api'
+import type { AlertItem, Client, CostSummary, FuelSnapshot, MaintenanceTask, Pilot, Trip, Truck } from '../types'
 
 type TabId =
   | 'dashboard'
+  | 'programacion'
   | 'combustible'
   | 'viajes'
   | 'costos'
   | 'mantenimiento'
   | 'flota'
   | 'pilotos'
+  | 'homepiloto'
+  | 'clientes'
+  | 'materiales'
   | 'roles'
   | 'mobile'
   | 'desktop'
@@ -22,9 +27,13 @@ export function useDashboardState() {
   const [trips, setTrips] = useState<Trip[]>([])
   const [maintenance, setMaintenance] = useState<MaintenanceTask[]>([])
   const [fuel, setFuel] = useState<FuelSnapshot[]>([])
+  const [fuelRecords, setFuelRecords] = useState<any[]>([])
+  const [programaciones, setProgramaciones] = useState<any[]>([])
+  const [memFuelPrice, setMemFuelPrice] = useState<any | null>(null)
   const [costs, setCosts] = useState<CostSummary>({ fuel: 0, maintenance: 0, payroll: 0, admin: 0 })
   const [trucks, setTrucks] = useState<Truck[]>([])
   const [pilots, setPilots] = useState<Pilot[]>([])
+  const [clientCount, setClientCount] = useState<number | null>(null)
 
   const [expenseForm, setExpenseForm] = useState({ type: 'maintenance', amount: '', description: '' })
   const [maintenanceForm, setMaintenanceForm] = useState({ truckId: '', type: 'preventivo', description: '', cost: '' })
@@ -43,11 +52,21 @@ export function useDashboardState() {
         const data = await loadDashboardData()
         setTrips(data.trips)
         setMaintenance(data.maintenanceQueue)
+        setFuelRecords(data.fuelRecords)
+        setProgramaciones(data.programaciones)
         setFuel(data.fuelSnapshots)
         setCosts(data.monthlyCosts)
         setTrucks(data.fleet)
         setPilots(data.pilots)
         setAlerts(data.alerts)
+        setMemFuelPrice(data.memFuelPrice)
+        // Cargar conteo de clientes activos
+        try {
+          const clients = await apiClient.getClients() as Client[]
+          setClientCount(clients.filter(c => c.status === 'active').length)
+        } catch {
+          setClientCount(null)
+        }
       } catch (error) {
         console.error('Error loading dashboard data:', error)
       } finally {
@@ -124,7 +143,10 @@ export function useDashboardState() {
     alerts,
     trips,
     maintenance,
+    fuelRecords,
+    programaciones,
     fuel,
+    memFuelPrice,
     costs,
     trucks,
     pilots,
@@ -156,6 +178,7 @@ export function useDashboardState() {
     pendingMaintenance,
     availablePilots,
     activeTrucks,
-    totalCosts
+    totalCosts,
+    clientCount
   }
 }

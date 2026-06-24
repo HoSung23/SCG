@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../utils/supabase.js'
 import { createGmailClient, fetchMessageHtml, findLatestMessageId, listLatestMessageIds } from '../utils/gmail.js'
 import { parseHtmlTableAtIndex, parseHtmlTables, type ParsedTable } from '../utils/htmlTable.js'
+import { autoAssignPendingProgramaciones } from './autoAssignProgramacion.js'
 
 export type ColumnMap = Record<string, string>
 
@@ -282,7 +283,42 @@ export async function runGmailSync(
     : await query.insert(filteredRows)
 
   if (result.error) {
+    // Registrar error en gmail_processing_logs
+    await supabaseAdmin.from('gmail_processing_logs').insert([{
+      gmail_message_id: messageId,
+      subject: message.subject || null,
+      received_at: message.receivedAt || null,
+      rows_inserted: 0,
+      status: 'error',
+      error_message: result.error.message,
+      raw_snippet: null
+    }]).then(() => undefined)
+
     throw new Error(`Error al escribir en Supabase: ${result.error.message}`)
+  }
+
+  // Registrar éxito en gmail_processing_logs
+  await supabaseAdmin.from('gmail_processing_logs').insert([{
+    gmail_message_id: messageId,
+    subject: message.subject || null,
+    received_at: message.receivedAt || null,
+    rows_inserted: filteredRows.length,
+    status: 'success',
+    error_message: null,
+    raw_snippet: null
+  }]).then(() => undefined)
+
+  // ✨ Auto-asignar programaciones si la tabla destino es 'programacion'
+  if (baseConfig.destinationTable === 'programacion') {
+    try {
+      const assignResults = await autoAssignPendingProgramaciones()
+      const assignedCount = assignResults.filter((r) => r.success).length
+      if (assignedCount > 0) {
+        console.log(`[gmail-sync] Auto-asignadas ${assignedCount}/${assignResults.length} programaciones`)
+      }
+    } catch (error) {
+      console.error('[gmail-sync] Error en auto-asignación:', error instanceof Error ? error.message : error)
+    }
   }
 
   return {

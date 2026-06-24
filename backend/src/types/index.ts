@@ -1,5 +1,6 @@
 export interface Truck {
   id: string
+  codigo?: string
   plate: string
   model: string
   year: number
@@ -29,7 +30,8 @@ export interface Pilot {
 
 export interface Trip {
   id: string
-  truckId: string
+  truckCodigo?: string
+  truckId?: string
   pilotId: string
   origin: string
   destination: string
@@ -47,7 +49,8 @@ export interface Trip {
 
 export interface MaintenanceTask {
   id: string
-  truckId: string
+  truckCodigo?: string
+  truckId?: string
   type: 'preventivo' | 'correctivo' | 'emergencia'
   description: string
   dueInKm?: number
@@ -64,14 +67,20 @@ export interface MaintenanceTask {
 
 export interface FuelRecord {
   id: string
-  truckId: string
+  truckCodigo?: string
+  truckId?: string
   station: string
+  serviceType?: 'pump' | 'puma_credit'
+  handlerCodigo?: string
+  handlerName?: string
+  creditVoucherNumber?: string
   dieselPriceGtq: number
   gallonsDispensed: number
   totalCostGtq: number
   meterKm?: number
   recordedAt: string
   notes?: string
+  notesExtended?: string
   createdAt: string
   updatedAt: string
 }
@@ -81,6 +90,7 @@ export interface CostRecord {
   category: 'combustible' | 'mantenimiento' | 'salarios' | 'seguros' | 'tolls' | 'otro'
   description: string
   amountGtq: number
+  relatedTruckCodigo?: string
   relatedTruckId?: string
   relatedPilotId?: string
   recordedAt: string
@@ -94,6 +104,7 @@ export interface AlertItem {
   level: 'critical' | 'warning' | 'info'
   title: string
   detail: string
+  relatedTruckCodigo?: string
   relatedTruckId?: string
   relatedPilotId?: string
   relatedTripId?: string

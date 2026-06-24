@@ -5,6 +5,10 @@ import { CostsView } from './CostsView'
 import { MaintenanceView } from './MaintenanceView'
 import { FleetView } from './FleetView'
 import { PilotsView } from './PilotsView'
+import { HomePilotoView } from './HomePilotoView'
+import { ClientesView } from './ClientesView'
+import { MaterialesView } from './MaterialesView'
+import { ProgramacionView } from './ProgramacionView'
 import { RolesView } from './RolesView'
 import { MobileView } from './MobileView'
 import { DesktopView } from './DesktopView'
@@ -19,12 +23,6 @@ type ViewRouterProps = {
   formatMoney: CurrencyFormatter
   fleetState: Truck[]
   fuelState: FuelSnapshot[]
-  selectedTripId: string
-  setSelectedTripId: (value: string) => void
-  selectedFuelStation: string
-  setSelectedFuelStation: (value: string) => void
-  newFuelPrice: string
-  setNewFuelPrice: (value: string) => void
   roleMatrix: RoleAccess[]
   selectedRole: string
   setSelectedRole: (value: string) => void
@@ -43,12 +41,6 @@ export function ViewRouter({
   formatMoney,
   fleetState,
   fuelState,
-  selectedTripId,
-  setSelectedTripId,
-  selectedFuelStation,
-  setSelectedFuelStation,
-  newFuelPrice,
-  setNewFuelPrice,
   roleMatrix,
   selectedRole,
   setSelectedRole,
@@ -70,18 +62,12 @@ export function ViewRouter({
   switch (activeTab) {
     case 'dashboard':
       return <DashboardView {...sharedProps} />
+    case 'programacion':
+      return <ProgramacionView {...sharedProps} />
     case 'combustible':
-      return (
-        <FuelView
-          {...sharedProps}
-          selectedFuelStation={selectedFuelStation}
-          setSelectedFuelStation={setSelectedFuelStation}
-          newFuelPrice={newFuelPrice}
-          setNewFuelPrice={setNewFuelPrice}
-        />
-      )
+      return <FuelView {...sharedProps} />
     case 'viajes':
-      return <TripsView {...sharedProps} selectedTripId={selectedTripId} setSelectedTripId={setSelectedTripId} />
+      return <TripsView {...sharedProps} />
     case 'costos':
       return <CostsView {...sharedProps} />
     case 'mantenimiento':
@@ -90,6 +76,12 @@ export function ViewRouter({
       return <FleetView {...sharedProps} />
     case 'pilotos':
       return <PilotsView {...sharedProps} />
+    case 'homepiloto':
+      return <HomePilotoView {...sharedProps} />
+    case 'clientes':
+      return <ClientesView />
+    case 'materiales':
+      return <MaterialesView />
     case 'roles':
       return (
         <RolesView

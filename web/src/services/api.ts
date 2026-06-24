@@ -134,6 +134,10 @@ export class ApiClient {
     return this.request('/fuel')
   }
 
+  async getMemFuelPriceToday() {
+    return this.request('/fuel-prices/today')
+  }
+
   async recordFuel(data: any) {
     return this.request('/fuel', {
       method: 'POST',
@@ -173,6 +177,76 @@ export class ApiClient {
     return this.request(`/alerts/${id}/resolve`, {
       method: 'PUT',
     })
+  }
+
+  // Clients
+  async getClients() {
+    return this.request('/clients')
+  }
+
+  async createClient(data: object) {
+    return this.request('/clients', { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  async updateClient(id: string, data: object) {
+    return this.request(`/clients/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+  }
+
+  async deleteClient(id: string) {
+    return this.request(`/clients/${id}`, { method: 'DELETE' })
+  }
+
+  // Materials
+  async getMaterials() {
+    return this.request('/materials')
+  }
+
+  async createMaterial(data: object) {
+    return this.request('/materials', { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  async updateMaterial(id: string, data: object) {
+    return this.request(`/materials/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+  }
+
+  async toggleMaterial(id: string) {
+    return this.request(`/materials/${id}/toggle`, { method: 'POST' })
+  }
+
+  // Programacion
+  async getProgramaciones(params?: { status?: string; fecha?: string }) {
+    const qs = params
+      ? '?' + new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v))).toString()
+      : ''
+    return this.request(`/programacion${qs}`)
+  }
+
+  async assignPilotToProgramacion(id: string, pilotId: string) {
+    return this.request(`/programacion/${id}/assign-pilot`, { method: 'POST', body: JSON.stringify({ pilotId }) })
+  }
+
+  async assignTruckToProgramacion(id: string, truckId: string) {
+    return this.request(`/programacion/${id}/assign-truck`, { method: 'POST', body: JSON.stringify({ truckId }) })
+  }
+
+  async generateTripFromProgramacion(id: string) {
+    return this.request(`/programacion/${id}/generate-trip`, { method: 'POST' })
+  }
+
+  // Trips extended
+  async startTrip(id: string, data: { gpsInicio?: string; odometroInicio?: number; observaciones?: string }) {
+    return this.request(`/trips/${id}/start`, { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  async finishTrip(id: string, data: { gpsFin?: string; odometroFin?: number; observaciones?: string; fuelConsumptionGallons?: number; costGtq?: number }) {
+    return this.request(`/trips/${id}/finish`, { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  async getAllTrips(params?: { status?: string; pilotId?: string; truckId?: string; clientId?: string; from?: string; to?: string }) {
+    const qs = params
+      ? '?' + new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v))).toString()
+      : ''
+    return this.request(`/trips${qs}`)
   }
 }
 
